@@ -24,7 +24,10 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Type Checking */
-    "types": ["vite/client"],
+    "types": [
+      "vite/client",
+      "vue"
+    ],
 
     /* Path Aliases */
     "baseUrl": ".",
