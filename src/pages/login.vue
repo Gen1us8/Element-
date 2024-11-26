@@ -1,41 +1,66 @@
+// 登录页面
+
+// 模板代码
 <template>
     <el-row class="login-container">
-        <el-col :lg="16" :md="12" :sm="8" class="login-banner">
-            <div class="login-banner-text">
+        <!-- 左侧背景 -->
+        <el-col :lg="16" :md="12" :sm="8">
+            <div>
                 欢迎使用世界上最好的信息管理系统！
             </div>
         </el-col>
-        <el-col :lg="8" :md="12" :sm="8" class="login-form-container">
-            <h2 class="login-title">欢迎回来</h2>
-            <div class="login-divider-container">
-                <span class="login-divider-line"></span>
+        <!-- 右侧登录表单 -->
+        <el-col :lg="8" :md="12" :sm="8">
+            <!-- 标题 -->
+            <h2>欢迎回来</h2>
+            <!-- 分割线 -->
+            <div>
+                <span></span>
                 <span>登录</span>
-                <span class="login-divider-line"></span>
+                <span></span>
             </div>
-            <el-form :model="form"
-            label-width="auto"
-            style="max-width: 600px"
-            class="login-form">
-                <el-form-item class="login-input">
-                    <el-input v-model="form.username" placeholder="用户名">
+            <!-- 登录表单 -->
+            <el-form
+                ref="loginFormRef"
+                :rules="loginRules"
+                :model="form"
+                label-width="auto"
+                class="login-form"
+                style="max-width: 600px">
+                <!-- 用户名 -->
+                <el-form-item prop="username">
+                    <el-input
+                        v-model="form.username"
+                        placeholder="用户名"
+                        @keyup.enter="handleEnterPress">
                         <template #prefix>
                             <el-icon><User /></el-icon>
                         </template>
                     </el-input>
                 </el-form-item>
-                <el-form-item class="login-input">
-                    <el-input v-model="form.password" placeholder="密码">
+                <!-- 密码 -->
+                <el-form-item prop="password">
+                    <el-input
+                        type="password"
+                        show-password
+                        v-model="form.password"
+                        placeholder="密码"
+                        style="width: 200px"
+                        @keyup.enter="handleEnterPress">
                         <template #prefix>
                             <el-icon><Lock /></el-icon>
                         </template>
                     </el-input>
                 </el-form-item>
+                <!-- 登录按钮 -->
                 <el-form-item style="text-align: center">
                     <el-button
-                        round 
-                        type="primary" 
-                        class="login-button"
-                        color="#f9a8d4">
+                        @click="handleLogin"
+                        :loading="loading"
+                        round
+                        type="primary"
+                        color="#f9a8d4"
+                        class="login-button">
                         LinkStart!
                     </el-button>
                 </el-form-item>
@@ -43,14 +68,81 @@
         </el-col>
     </el-row>
 </template>
+
+// 使用 setup 语法糖进行逻辑编写
 <script setup>
-import { reactive } from 'vue'
-const form = reactive({
-    name: '',
+import { reactive, ref } from 'vue' // 引入vue
+import  { useRouter } from 'vue-router' // 引入vue-router
+import { login } from '~/api/manager'; // 引入登录api
+import { setToken, setLevel } from '~/composables/auth' // 引入auth
+import { toast } from '~/composables/utils' // 引入 utils
+import { useStore } from 'vuex'; // 引入vuex
+
+const router = useRouter() // 获取路由实例
+const loading = ref(false) // 加载状态
+const store = useStore() // 获取store实例
+
+// 登录框输入规则
+const loginRules = reactive({
+    username: [{
+        required: true,
+        message: '请输入用户名',
+        trigger: 'blur'
+    }],
+    password: [{
+        required: true,
+        message: '请输入密码',
+        trigger: 'blur'
+    }]
 })
+const loginFormRef = ref(null) // 登录表单实例
+
+const handleLogin = () => {
+    loading.value = true // 设置加载状态
+    loginFormRef.value.validate((valid) => {
+        if (!valid) {
+            return false
+        }
+        login(form.username, form.password)
+            // 登录成功，存储用户信息
+            .then((res) => {
+                console.log(res);
+
+                // 存储用户 Token 和 Level
+                setToken(res.token)
+                setLevel(res.level)
+                // 存储用户信息
+                store.commit('SET_USER', res)
+
+                // 登录成功，提示信息
+                toast('登录成功', '欢迎回来，' + form.username, 'success')
+
+                // 登录成功，跳转首页
+                router.push('/')
+            })
+            .finally(() => {
+                loading.value = false // 设置加载状态
+            })
+    })
+}
+
+const handleEnterPress = () => {
+    // 如果用户名和密码不为空，则执行登录
+    if (form.username && form.password) {
+        handleLogin()
+    }
+}
+
+const form = reactive({
+    username: '',
+    password: ''
+})
+
 </script>
 
+// 样式代码
 <style lang="postcss">
+
 .login-container {
     @apply min-h-dvh;
 }
@@ -83,7 +175,7 @@ const form = reactive({
     @apply flex flex-col items-center;
 }
 
-.login-input {
+.login-form {
     @apply w-[250px];
 }
 

@@ -12,5 +12,16 @@ export default defineConfig({
       '~': path.resolve(__dirname, "src"), // 设置src文件夹别名
     },
   },
+
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://mis.wooow.finance/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
+
   plugins: [vue()], // 使用vue插件
 })

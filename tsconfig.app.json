@@ -40,5 +40,5 @@
     "src/**/*.tsx", 
     "src/**/*.vue",
     "vite.config.*"
-  ]
+, "src/store/index.js", "src/store/index.js"  ]
 }
